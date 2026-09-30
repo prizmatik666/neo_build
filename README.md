@@ -1,50 +1,30 @@
-neo_build.py is a curses-based terminal UI for managing a Neocities site through the Neocities API.
+neo_build.py
 
-It provides local and remote file browsers so common site-management tasks can be performed without manually typing or remembering full paths.
+A keyboard-driven curses TUI for managing a Neocities site from the terminal.
 
-Features
+neo_build.py wraps the Neocities API in simple file browsers, so most jobs are point-and-select instead of typing remote paths by hand.
 
-Browse the remote Neocities directory tree
+What you can do
 
-Browse local files and directories
+Browse files and directories on your Neocities site
 
-Upload one or multiple files
+Upload one or several local files
 
-Download remote files
+Download a remote file
 
 Create remote directories
 
-Rename or move remote files and directories
+Move or rename remote files and directories
 
-Delete remote files/directories
+Delete remote files and directories
 
-Compare local files against remote SHA-1 hashes
+Compare local files with remote SHA-1 hashes
 
 Upload only files that have changed
 
-View Neocities site information
+View basic site information
 
-Filter directory listings from inside the TUI
-
-Configure a local project root and download directory
-
-Load the Neocities API key from a local .env file
-
-Uploads preserve paths relative to the configured local project root.
-
-For example, if the local root is:
-
-~/website/
-
-and you select:
-
-~/website/images/logo.png
-
-the tool can upload it as:
-
-images/logo.png
-
-under the remote directory selected in the TUI.
+Set a local project root and download directory
 
 Requirements
 
@@ -54,58 +34,25 @@ requests
 
 A Neocities API key
 
+A terminal with curses support
+
 On Debian, Kali, or Ubuntu:
 
 sudo apt install python3-requests
 
-API Key
+API key
 
-Create a .env file in the same directory as neo_build.py:
+The easiest setup is a .env file beside neo_build.py:
 
 NEOCITIES_API_KEY=your_api_key_here
 
-Protect it:
-
-chmod 600 .env
-
-The key lookup order is:
-
-NEOCITIES_API_KEY already exported in the environment
-
-.env beside neo_build.py
-
-~/.config/neocities-tui/config.json
-
-The .env loader is built into the script, so python-dotenv is not required.
-
-Do not commit .env to GitHub.
-
-A basic .gitignore should include:
-
-.env
-__pycache__/
-*.pyc
-
-Running
+Then run:
 
 python3 neo_build.py
 
-Or:
+The tool also accepts NEOCITIES_API_KEY from your shell environment. If no key is found, it will ask for one before opening the TUI.
 
-chmod +x neo_build.py
-./neo_build.py
-
-You can also override the local project directory or download directory:
-
-python3 neo_build.py --local-root ~/website
-
-python3 neo_build.py --download-dir ~/Downloads/neocities
-
-To prevent changed path settings from being written on exit:
-
-python3 neo_build.py --no-save
-
-Main Menu
+Main menu
 
 1  Browse remote site
 2  Upload local files
@@ -117,244 +64,204 @@ Main Menu
 8  Site information
 9  Settings
 
-Both the local and remote browsers support normal directory navigation, filtering, multi-selection where appropriate, and directory selection from inside the TUI.
+Browser controls
 
-Typical controls include:
+The local and remote file browsers use the same basic controls:
 
-↑ / ↓       Navigate
-Enter       Open / select
-Backspace   Parent directory
-Space       Mark/unmark files
-d           Finish selection / choose directory
-/           Filter
-c           Clear filter
-r           Refresh remote listing
-q / Esc     Back
+Up / Down      Move through the list
+Enter          Open a directory or select an item
+Backspace      Go to the parent directory
+/              Filter the current listing
+c              Clear the filter
+r              Refresh a remote listing
+q / Esc        Go back
 
-Uploading Files
+When selecting several files:
 
-The upload workflow uses the local file browser first, then the remote directory browser.
+Space          Mark or unmark an item
+d              Finish the selection
 
-Typical flow:
+When choosing a destination directory:
 
-Upload local files
-        ↓
-Browse local filesystem
-        ↓
-Select one or more files
-        ↓
-Choose destination remote directory
-        ↓
-Confirm upload
+d              Use the directory currently being viewed
 
-This avoids having to manually type absolute local or remote paths.
+Local root
 
-When a local project root is configured, paths beneath that root can be preserved during upload.
+The local root is simply the top of the local site tree that neo_build.py uses when building upload paths.
 
-Example:
+For example, suppose your local root is:
 
-Local project root:
-~/website
+/home/user/my-site
 
-Selected file:
+and you select:
 
-~/website/assets/images/logo.png
+/home/user/my-site/images/logo.png
 
-Remote path:
-
-assets/images/logo.png
-
-Moving and Renaming Remote Files
-
-The Rename / move remote path option can move a file between directories and optionally rename it at the same time.
-
-Example:
+The part underneath the local root is:
 
 images/logo.png
-        ↓
-assets/site-logo.png
 
-Choose the existing file, browse to the new parent directory, then enter the desired filename.
+If you choose the remote site root as the destination, the file becomes:
 
-The same operation can also be used to move a file without renaming it:
+/images/logo.png
 
-images/logo.png
-        ↓
-assets/logo.png
+If you choose a remote directory named backup, it becomes:
 
-The destination directory must already exist.
+/backup/images/logo.png
 
-If it does not, create it first using:
+This lets you select files through the browser while keeping their local folder structure.
 
-Create remote directory
+You can change the local root from Settings or when starting the program:
 
-Creating Remote Directories
+python3 neo_build.py --local-root ~/my-site
 
-The directory creation workflow lets you browse to the desired parent directory and then enter only the new directory name.
+Uploading files
+
+Choose:
+
+2  Upload local files
+
+Then:
+
+Browse your local project.
+
+Mark files with Space.
+
+Press d when finished.
+
+Browse the remote site.
+
+Enter the directory where the selected files should go.
+
+Press d to choose that directory.
+
+Review the upload plan and confirm.
+
+The upload plan shows the local file and the remote path it will use before anything is sent.
+
+Moving or renaming remote files
+
+Choose:
+
+5  Rename / move remote path
+
+Select a remote file or directory, choose its new parent directory, then enter its new name.
+
+To move a file without renaming it, keep the same filename.
 
 Example:
 
-/
-└── assets/
+/images/logo.png
 
-To create:
+can be moved to:
 
-/assets/images/
+/assets/logo.png
 
-browse to:
+Or moved and renamed in the same step:
 
-/assets/
+/images/logo.png
 
-then enter:
+to:
 
-images
+/assets/site-logo.png
 
-Downloading Files
+Creating directories
 
-Remote files can be selected through the remote browser and downloaded into the configured local download directory.
+Choose:
 
-The tool recreates the remote relative directory structure locally where appropriate.
+4  Create remote directory
 
-Example remote file:
+Browse to the parent directory, press d, and enter the new directory name.
 
-assets/images/logo.png
+You only need to type the new name; the parent path comes from the browser.
 
-Configured download directory:
+Downloading files
+
+Choose:
+
+3  Download remote file
+
+Select a file from the remote browser and it will be saved under your configured download directory.
+
+By default:
 
 ~/Downloads/neocities
 
-Downloaded path:
+Remote folders are kept in the downloaded path. For example:
+
+/assets/images/logo.png
+
+is saved as:
 
 ~/Downloads/neocities/assets/images/logo.png
 
-Downloaded files are first written to a temporary .part file and moved into place after the download completes.
+You can change the download directory in Settings or with:
 
-Hash Comparison
+python3 neo_build.py --download-dir ~/Downloads/my-neocities-files
 
-The hash comparison mode calculates local SHA-1 hashes and compares them with the remote copies through the Neocities upload_hash API.
+Comparing local and remote files
 
-The workflow is designed to make incremental publishing easier.
+Choose:
 
-Typical flow:
+7  Compare local files with remote hashes
 
-Compare local files with remote hashes
-        ↓
-Select local files
-        ↓
-Choose corresponding remote directory
-        ↓
-Calculate local SHA-1 hashes
-        ↓
-Query Neocities upload_hash
-        ↓
-Display changed / unchanged files
-        ↓
-Optionally upload only changed files
+Select local files, choose the matching remote base directory, and neo_build.py will calculate SHA-1 hashes and ask Neocities which files already match.
 
-This helps avoid uploading files that already match the remote version.
+The result shows:
 
-Deleting Remote Files
+Up to date: N
+Needs upload: N
 
-Remote files and directories can be selected through the TUI.
+If changed files are found, the TUI can upload only those files immediately.
 
-Deletion requires explicitly typing:
+This is useful when you have edited a few files and do not want to resend everything.
+
+Deleting files
+
+Choose:
+
+6  Delete remote files/directories
+
+Mark the items you want to remove and finish the selection with d.
+
+Before deletion, the TUI shows the selected paths and asks you to type:
 
 DELETE
 
-before the API request is sent.
+Deleting a remote directory also deletes the contents inside it.
 
-This extra confirmation is intended to reduce accidental removal of remote site content.
+Site information
 
-Site Information
-
-The site information view can display information about the authenticated Neocities site.
-
-It can also query public site information for another Neocities site when a sitename is supplied.
+The Site information screen can show information for your authenticated site or look up public information for another Neocities sitename.
 
 Settings
 
-The settings screen can configure:
+The settings screen lets you change:
 
-Local project root
+API key
+
+Local root
 
 Download directory
 
-API key fallback
-
-Other persistent TUI preferences
-
-Saved configuration is stored under:
+Settings are stored in:
 
 ~/.config/neocities-tui/config.json
 
-The configuration file is intended to use private user-only permissions.
+A .env or shell-provided NEOCITIES_API_KEY takes precedence over a key stored in the config file.
 
-If the API key is loaded from the local .env file, the tool does not need to duplicate it into the JSON configuration.
+Command-line options
 
-Directory Browsing
+--local-root PATH       Start with PATH as the local project root
+--download-dir PATH     Change the download destination
+--no-save               Do not save changed path settings when the program exits
 
-One of the main goals of neo_build.py is to avoid requiring users to remember long local and remote paths.
+Example:
 
-Instead of manually entering paths such as:
-
-/home/user/projects/site/assets/images/backgrounds/
-
-you can navigate interactively through the curses browser.
-
-The same idea applies to the remote Neocities site tree.
-
-This makes operations such as uploading, moving, downloading, and deleting files closer to using a terminal file manager than a command-line API client.
-
-Path Handling
-
-Remote paths are treated as site-relative paths.
-
-For example:
-
-index.html
-assets/style.css
-images/banner.png
-projects/demo/index.html
-
-Remote paths containing .. are rejected by the client.
-
-This prevents accidental traversal outside the intended remote path structure.
-
-Security Notes
-
-Keep your API key private.
-
-Do not commit:
-
-.env
-
-to a public repository.
-
-Recommended permissions:
-
-chmod 600 .env
-
-A suggested .gitignore:
-
-.env
-__pycache__/
-*.pyc
-*.log
-
-The Neocities API key should be treated like a password because it allows modification of your site.
+python3 neo_build.py --local-root ~/my-site --download-dir ~/Downloads/site-backups
 
 Neocities API
 
-neo_build.py uses the official Neocities API:
+neo_build.py uses the official Neocities developer API:
 
 https://neocities.org/api
-
-The tool is intended as a terminal frontend for common API operations rather than a replacement for Neocities itself.
-
-Notes
-
-neo_build.py is a client for managing your own Neocities content.
-
-Neocities remains responsible for the remote service, API behavior, storage limits, supporter features, account restrictions, and server-side validation.
-
-The tool is primarily designed for people who prefer a keyboard-driven terminal workflow but still want visual file and directory selection instead of manually typing every path.
