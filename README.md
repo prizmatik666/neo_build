@@ -1,5 +1,7 @@
 neo_build.py
 
+<img width="431" height="487" alt="image" src="https://github.com/user-attachments/assets/8b09d100-6104-4bfb-bde5-5d93266d3ab8" />
+
 A keyboard-driven curses TUI for managing a Neocities site from the terminal.
 
 neo_build.py wraps the Neocities API in simple file browsers, so most jobs are point-and-select instead of typing remote paths by hand.
